@@ -4,7 +4,7 @@
 
 <br />
 <p align="center">
-  <a href="https://github.com/Brktrlw/Stok-Takip">
+  <a href="https://github.com/Brktrlw/Stok-Muhasebe-Yazilimi">
     <img src="images/icon.png" alt="Logo" width="140" height="140">
   </a>
 
@@ -73,7 +73,6 @@ Kurulumda Windows işletim sistemleri için sadece setup dosyasını indirmeniz 
 0. -Windows-
 
 Windows için setup dosyasını indirip klasik bir kurulum dosyası şeklinde kurabilirsiniz.
-(Henüz Geliştirme Aşamasında olduğu için kurulum dosyası hazırlanmamıştır.)
 
 ## Kullanım
 
@@ -84,9 +83,9 @@ Kurma işlemini gerçekleştirdikten sonra soldaki tüm sekmelerin içerisinde y
 
 ## Images
 Programın arayüzünden örnek resimler.
+<img src="images/Untitled2.png"></img><br>
+<img src="images/Untitled.png"></img><br>
 <img src="images/Capture.JPG"></img><br>
-<img src="images/Capture3.JPG"></img><br>
-<img src="images/Capture2.JPG"></img><br>
 ## lisans
 
 Distributed under the APACHE License. See `LICENSE` for more information.<br>
@@ -96,7 +95,7 @@ Copyright (c) 2021
 
 E-Mail Adresi:E-Mail - brktrl@protonmail.ch
 
-Proje Linki: [https://github.com/Brktrlw/ogrencitakip](https://github.com/Brktrlw/ogrencitakip)<br>
+Proje Linki: [https://github.com/Brktrlw/Stok-Muhasebe-Yazilimi](https://github.com/Brktrlw/Stok-Muhasebe-Yazilimi)<br>
 <!--Web Site Linki: [http://www.riglsable.rf.gd/](http://www.riglsable.rf.gd/)-->
 
 
