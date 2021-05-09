@@ -8,7 +8,7 @@
     <img src="images/icon.png" alt="Logo" width="140" height="140">
   </a>
 
-  <h3 align="center">Stok Takip v1.3</h3>
+  <h3 align="center">Stok/Muhasebe Yazılımı</h3>
 
   <p align="center">
     Stok Takip/Muhasebe Yazılımı
@@ -52,11 +52,11 @@
 
 ## Program-Hakkında
 
-**Üniversite sınavına hazırlanan öğrencilerin çözdükleri soru,deneme vb gibi verileri veritabanında tutup ,kolaylıkla öğrencinin başarısını ve gidişatını grafiksel bir şekilde izleyip görüntülemesini sağlayan bir programdır.Türkçe ve basit arayüzü ile kullanım zorluğu yaşamayacaksınız.**
+**Tedarikçilerden ürün alış ve satışlara,müşteri ekleme satış oluşturma vb gibi bir çok özelliği ile ücretsiz çoğu kobinin kullanabileceği muhasabe yazılımı**
 
 `BrktrLawliet`,
 `brktrl@protonmail.ch`
-`Öğrenci Takip`
+`Stok/Muhasebe Yazılımı`
 
 
 ### Ne-İle-Geliştirildi
