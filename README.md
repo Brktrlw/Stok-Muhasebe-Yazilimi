@@ -44,7 +44,7 @@
     </li>
     <li><a href="#Kullanım">Kullanış</a></li>
     <li><a href="#Desteklediği-İşletim-Sistemleri">Desteklediği İşletim Sistemleri</a>
-    <li><a href="Images">Örnek Resimler</a>
+    <li><a href="#Ornek-Resimler">Örnek Resimler</a>
     <li><a href="#lisans">Lisans</a></li>
     <li><a href="#Iletisim">İletişim</a></li>
   </ol>
@@ -81,7 +81,7 @@ Kurma işlemini gerçekleştirdikten sonra soldaki tüm sekmelerin içerisinde y
 ## Desteklediği-İşletim-Sistemleri
 * Windows
 
-## Images
+## Ornek-Resimler
 Programın arayüzünden örnek resimler.
 <img src="images/Untitled2.png"></img><br>
 <img src="images/Untitled.png"></img><br>
