@@ -28,7 +28,7 @@
 
 
 <details open="open">
-  <summary><h2 style="display: inline-block">Table of Contents</h2></summary>
+  <summary><h2 style="display: inline-block">Bilgilendirme</h2></summary>
   <ol>
     <li>
       <a href="#Program-Hakkında">Program Hakkında</a>
