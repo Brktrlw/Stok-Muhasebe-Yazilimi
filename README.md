@@ -82,7 +82,7 @@ Kurma işlemini gerçekleştirdikten sonra soldaki tüm sekmelerin içerisinde y
 * Windows
 
 ## Ornek-Resimler
-Programın arayüzünden örnek resimler.
+Programın arayüzünden örnek resimler.(Tablolardaki kişisel bilgilerin gerçek bilgiler ile alakası olmayıp,rastgele oluşturulmuş verilerden ibarettir.)
 <img src="images/Untitled2.png"></img><br>
 <img src="images/Untitled.png"></img><br>
 <img src="images/Capture.JPG"></img><br>
