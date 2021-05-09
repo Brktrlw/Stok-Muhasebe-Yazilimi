@@ -61,9 +61,8 @@
 
 ### Ne-İle-Geliştirildi
 
-* [PyQt5](https://pypi.org/project/PyQt5/)
-* [Python3](https://www.python.org)
-* [Matplotlib](https://www.matplotlib.org)
+* [C#]()
+* [VisualStudio](https://visualstudio.microsoft.com/tr/)
 
 ## Başlangıç
 
