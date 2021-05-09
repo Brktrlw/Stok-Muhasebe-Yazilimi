@@ -66,7 +66,7 @@
 
 ## Başlangıç
 
-Kurulumda Windows işletim sistemleri için sadece setup dosyasını indirmeniz yeterli olacaktır.
+Kurulumda Windows işletim sistemleri için sadece setup dosyasını indirmeniz yeterli olacaktır.Açık kaynak kodlu bir yazılım olduğundan dolayı gönül rahatlığı ile programı bilgisayarınıza kurup kullanabilirsiniz.Hiçbir şekilde zararlı yazılım enjekte edilmemiş olup tüm kodları public yani herkese açıktır.
 
 
 ### Kurulum
