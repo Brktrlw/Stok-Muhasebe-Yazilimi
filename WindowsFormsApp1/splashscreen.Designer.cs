@@ -122,7 +122,6 @@ namespace WindowsFormsApp1
             this.Text = "Stok Takip Uygulaması";
             this.TextColor = System.Drawing.Color.White;
             this.ThemeName = "MetroDark";
-            this.Load += new System.EventHandler(this.splashscreen_Load);
             this.ResumeLayout(false);
 
         }

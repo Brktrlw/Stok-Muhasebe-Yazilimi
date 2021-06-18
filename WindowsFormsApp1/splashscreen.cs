@@ -19,12 +19,6 @@ namespace WindowsFormsApp1
             
         }
 
-        private void splashscreen_Load(object sender, EventArgs e)
-        {
-
-            
-        }
-
         private void timer1_Tick(object sender, EventArgs e)
         {
             int i = 0;
@@ -32,9 +26,8 @@ namespace WindowsFormsApp1
             while (i < 100)
             {
                 
-                deger = deger + 1;
+                deger +=1;
                 progressbar.Value = deger;
-                
                 i++;
             }
 

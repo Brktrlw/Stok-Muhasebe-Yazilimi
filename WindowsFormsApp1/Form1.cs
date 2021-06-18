@@ -12,6 +12,8 @@ using System.Data.SQLite;
 using MetroSet_UI.Forms;
 using System.IO;
 using Tulpep.NotificationWindow;
+using LiveCharts.Wpf;
+using LiveCharts;
 
 namespace WindowsFormsApp1
 {
@@ -21,30 +23,37 @@ namespace WindowsFormsApp1
         public static SQLiteConnection baglanti = new SQLiteConnection(veritabaniyolu);
         public Form1()
         {
-            Thread t = new Thread(new ThreadStart(StartForm));
-            t.Start();
-            Thread.Sleep(3000);
+            //Thread t = new Thread(new ThreadStart(StartForm));
+            //t.Start();
+            //Thread.Sleep(3000);
             InitializeComponent();
-            t.Abort();
+            //t.Abort();
             string dosya_yolu = "metin.txt";
             StreamReader sr = new StreamReader(dosya_yolu);                                   //Bu kod bloğu anasayfadaki notlar kısmını metin belgesinden okuyarak yazıları yerleştirir.                      
             not_text.Text = sr.ReadToEnd();
             sr.Close();
 
         }
-
+        public void Uyari(string mesaj, string mesaj2 = "")
+        {
+            msgbox msg = new msgbox();
+            msg.hatauyarisi(mesaj, mesaj2);
+        }
         private void Form1_Load(object sender, EventArgs e)                     //uygulama acılırken calısan kod blogu.
         {
 
-            
-        
             baglanti.Open();
+            satilacak_urunler.AllowUserToAddRows = false;
             string sql_urun_bilgi_getir = "SELECT * FROM Urunler";                          //Bu kod bloğu Ürünler tablosuna verileri veritabanından çekerek yerleştirir. 
             SQLiteDataAdapter da = new SQLiteDataAdapter(sql_urun_bilgi_getir, baglanti);
             DataTable dturunler = new DataTable();
             da.Fill(dturunler);
             tablo_urunler.DataSource = dturunler;
             DatadridviewSetting(tablo_urunler);
+            DatadridviewSetting(satilacak_urunler);
+            //satilacak_urunler.Rows[0].Selected = true;
+            satilacak_urunler.AllowUserToAddRows = false;
+
 
             string sql_urun_bilgi_getir2 = "SELECT * FROM Urunler";                             //Bu kod bloğu Ürünler tablosuna verileri veritabanından çekerek yerleştirir. 
             SQLiteDataAdapter da2 = new SQLiteDataAdapter(sql_urun_bilgi_getir2, baglanti);
@@ -108,6 +117,10 @@ namespace WindowsFormsApp1
             da_azalan.Fill(dt_azalan);
             tbl_azalan_stok.DataSource = dt_azalan;
             DatadridviewSetting(tbl_azalan_stok);
+
+            DatadridviewSetting(table_ciro_satislar);
+            DatadridviewSetting(table_ciro_alislar);
+
             if (tbl_azalan_stok.RowCount > 1)
             {
                 PopupNotifier popup = new PopupNotifier();
@@ -119,13 +132,45 @@ namespace WindowsFormsApp1
                 popup.Popup();
 
             }
+            try
+            {
+                DateTime bugun = DateTime.Today;
+                string ay = bugun.ToString("MM");
+                string yil = bugun.ToString("yyyy");
+                string sql_tarih_sorgula = $"SELECT UrunAdi,SUM(UrunAdedi)as UrunAdedi,UrunSatisFiyati FROM Satislar INNER JOIN Urunler on Satislar.UrunID = Urunler.UrunID where SatisTarihi BETWEEN '{yil}-{ay}-01' AND '{yil}-{ay}-31' GROUP BY UrunAdi";
 
+                SQLiteDataAdapter dagraf = new SQLiteDataAdapter(sql_tarih_sorgula, baglanti);
+                DataTable dtgraf = new DataTable();
+                dagraf.Fill(dtgraf);
+                dataGridView1.DataSource = dtgraf;
+                dataGridView1.AllowUserToAddRows = false;
+                if (dataGridView1.RowCount > 0)
+                {
+                    button4.Visible = false;
+                }
+                Func<ChartPoint, string> labelPoint = chartPoint => string.Format("{0} ({1:P})", chartPoint.Y, chartPoint.Participation);
+                SeriesCollection piechartData = new SeriesCollection();
+                var collection = dataGridView1.Rows.Cast<DataGridViewRow>().GroupBy(x => x.Cells[1].Value).Where(g => g.Count() > 0).Select(y => new { Element = y.Key, Counter = y.Count() }).ToList();
+                foreach (DataGridViewRow item in dataGridView1.Rows)
+                {
+                    piechartData.Add(new PieSeries { Title = Convert.ToString(item.Cells["UrunAdi"].Value), Values = new ChartValues<double> { Convert.ToDouble(item.Cells["UrunAdedi"].Value) }, DataLabels = true, LabelPoint = labelPoint });
+                }
+
+
+
+                pieChart1.Series = piechartData;
+                pieChart1.LegendLocation = LegendLocation.Right;
+
+            }
+            catch
+            {
+                button4.Visible = true;
+            }
 
             baglanti.Close();
-            panel_var_olan_urun.Visible = false;
-            panel_yeni_urun.Visible = true;
-
+            metroSetTabControl1.SelectedIndex = 0;
         }
+
         private void DatadridviewSetting(DataGridView datagridview)                           //Bu fonksiyon Ürünler tablosunu kişiselleştirmeye renklerini vs ayarlamaya yarar
         {
             datagridview.RowHeadersVisible = false;
@@ -282,15 +327,13 @@ namespace WindowsFormsApp1
             DataTable dturunler = new DataTable();
             da.Fill(dturunler);
             tablo_urunler.DataSource = dturunler;
-
-            string sql_urun_bilgi_getir2 = "SELECT * FROM Urunler";                             //Bu kod bloğu Urunler tablosuna verileri veritabanından çekerek yerleştirir.
-            SQLiteDataAdapter da2 = new SQLiteDataAdapter(sql_urun_bilgi_getir2, baglanti);
+                                                                                                //Bu kod bloğu Urunler tablosuna verileri veritabanından çekerek yerleştirir.
+            SQLiteDataAdapter da2 = new SQLiteDataAdapter(sql_urun_bilgi_getir, baglanti);
             DataTable dturunler2 = new DataTable();
             da2.Fill(dturunler2);
             tbl2_urunler.DataSource = dturunler2;
-
-            string sql_urun3_bilgi_getir2 = "SELECT * FROM Urunler";                             //Bu kod bloğu Urunler tablosuna verileri veritabanından çekerek yerleştirir.
-            SQLiteDataAdapter da9 = new SQLiteDataAdapter(sql_urun3_bilgi_getir2, baglanti);
+                                                                                                 //Bu kod bloğu Urunler tablosuna verileri veritabanından çekerek yerleştirir.
+            SQLiteDataAdapter da9 = new SQLiteDataAdapter(sql_urun_bilgi_getir, baglanti);
             DataTable dturunler5 = new DataTable();
             da9.Fill(dturunler5);
             table_urunler_3.DataSource = dturunler5;
@@ -312,9 +355,8 @@ namespace WindowsFormsApp1
             DataTable dt_must = new DataTable();
             da_m.Fill(dt_must);
             tablo_musteriler.DataSource = dt_must;
-
-            string sql_must_bilgi_getir2 = "SELECT * FROM Musteriler";                         //Bu kod bloğu Müşteriler tablosuna verileri veritabanından çekerek yerleştirir.  
-            SQLiteDataAdapter da_m2 = new SQLiteDataAdapter(sql_must_bilgi_getir2, baglanti);
+                                                                                               //Bu kod bloğu Müşteriler tablosuna verileri veritabanından çekerek yerleştirir.  
+            SQLiteDataAdapter da_m2 = new SQLiteDataAdapter(sql_must_bilgi_getir, baglanti);
             DataTable dt_must2 = new DataTable();
             da_m2.Fill(dt_must2);
             tbl2_musteriler.DataSource = dt_must2;
@@ -336,8 +378,46 @@ namespace WindowsFormsApp1
             DataTable dt_azalan = new DataTable();
             da_azalan.Fill(dt_azalan);
             tbl_azalan_stok.DataSource = dt_azalan;
-            baglanti2.Close();
 
+            try
+            {
+                DateTime bugun = DateTime.Today;
+                string ay = bugun.ToString("MM");
+                string yil = bugun.ToString("yyyy");
+                string sql_tarih_sorgula = $"SELECT UrunAdi,SUM(UrunAdedi)as UrunAdedi,UrunSatisFiyati FROM Satislar INNER JOIN Urunler on Satislar.UrunID = Urunler.UrunID where SatisTarihi BETWEEN '{yil}-{ay}-01' AND '{yil}-{ay}-31' GROUP BY UrunAdi";
+
+                SQLiteDataAdapter dagraf = new SQLiteDataAdapter(sql_tarih_sorgula, baglanti);
+                DataTable dtgraf = new DataTable();
+                dagraf.Fill(dtgraf);
+                dataGridView1.DataSource = dtgraf;
+                dataGridView1.AllowUserToAddRows = false;
+                if (dataGridView1.RowCount > 0)
+                {
+                    button4.Visible = false;
+                }
+                Func<ChartPoint, string> labelPoint = chartPoint => string.Format("{0} ({1:P})", chartPoint.Y, chartPoint.Participation);
+                SeriesCollection piechartData = new SeriesCollection();
+                var collection = dataGridView1.Rows.Cast<DataGridViewRow>().GroupBy(x => x.Cells[1].Value).Where(g => g.Count() > 0).Select(y => new { Element = y.Key, Counter = y.Count() }).ToList();
+                foreach (DataGridViewRow item in dataGridView1.Rows)
+                {
+                    piechartData.Add(new PieSeries { Title = Convert.ToString(item.Cells["UrunAdi"].Value), Values = new ChartValues<double> { Convert.ToDouble(item.Cells["UrunAdedi"].Value) }, DataLabels = true, LabelPoint = labelPoint });
+                }
+                
+
+
+                pieChart1.Series = piechartData;
+                pieChart1.LegendLocation = LegendLocation.Right;
+
+            }
+            catch
+            {
+                button4.Visible = true;
+            }
+
+
+
+
+            baglanti2.Close();
         }
         
         private void btn_u_gnclle_Click(object sender, EventArgs e)         //bilgileri getirilmiş ürünün güncelleme işlemleri yapılıyor bu kısımda.
@@ -483,15 +563,9 @@ namespace WindowsFormsApp1
                         popup.TitleText = "İşlem Başarılı";
                         popup.ContentText = "\n Müşteri başarıyla eklenmiştir";
                         popup.Popup();
-
-                        string sql_must_bilgi_getir = "SELECT * FROM Musteriler";                         //Bu kod bloğu Müşteriler tablosuna verileri veritabanından çekerek yerleştirir.
-                        SQLiteDataAdapter da_m = new SQLiteDataAdapter(sql_must_bilgi_getir, baglanti2);
-                        DataTable dt_must = new DataTable();
-                        da_m.Fill(dt_must);
-                        tablo_musteriler.DataSource = dt_must;
-                        DatadridviewSetting(tablo_musteriler);
                         baglanti2.Close();
                         cmd_m_ekle.Dispose();
+                        tablolariGuncelle();
                     }
                
             }
@@ -645,6 +719,7 @@ namespace WindowsFormsApp1
             }
 
             baglanti.Close();
+            tablolariGuncelle();
         }
 
         private void t_btn_temizle_Click_1(object sender, EventArgs e)          //Bu kısımda textboxların içlerini boşalttık.
@@ -893,7 +968,7 @@ namespace WindowsFormsApp1
             else
             {
                 radio_isim_satis.Checked = true;
-                (tbl2_musteriler.DataSource as DataTable).DefaultView.RowFilter = string.Format("MusteriTC LIKE '{0}%'", txt_must_ara2.Text);
+                (tbl2_musteriler.DataSource as DataTable).DefaultView.RowFilter = string.Format("Isim LIKE '{0}%'", txt_must_ara2.Text);
             }
         }
 
@@ -911,35 +986,62 @@ namespace WindowsFormsApp1
                 {
                     MessageBox.Show("Lütfen bir ürün seçiniz", "Hata Uyarısı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
+                else if (Convert.ToInt32(tbl2_urunler.SelectedRows[0].Cells[2].Value) == 0) 
+                {
+                    Uyari("Seçtiğiniz ürünün stoğu kalmamıştır");
+                }
                 else
                 {
-                    string veritabaniyolu2 = "Data source=Database/veritabani.db";
-                    SQLiteConnection baglanti2 = new SQLiteConnection(veritabaniyolu2);                 //Bu kısımda veritabanına bağlanıp gerekli işlemleri yaptık.
-                    baglanti2.Open();
-                    string sql_m_sorgula = $"SELECT * FROM Urunler WHERE UrunID='{urunId}'";
-                    SQLiteCommand cmd_m_sorgula = new SQLiteCommand(sql_m_sorgula, baglanti2);
-                    cmd_m_sorgula.ExecuteNonQuery();
-                    DataTable dt = new DataTable();
-                    SQLiteDataAdapter da = new SQLiteDataAdapter(cmd_m_sorgula);
-                    da.Fill(dt);
-                    SQLiteDataReader dr = cmd_m_sorgula.ExecuteReader();
-                    if (dr.Read())
+                    string id = tbl2_urunler.SelectedRows[0].Cells[0].Value + string.Empty;
+                    string ad = tbl2_urunler.SelectedRows[0].Cells[1].Value + string.Empty;
+                    string fiyat = tbl2_urunler.SelectedRows[0].Cells[3].Value + string.Empty;
+
+
+
+                    int numRows = satilacak_urunler.Rows.Count;
+
+
+
+                    if (numRows == 0)
                     {
-                        satis_urun_ad.Text = dr["UrunAdi"].ToString();
-                        satis_urun_id.Text = dr["UrunID"].ToString();                   //bilgiler textboxlara geliyor bu kısımda.
-                        satis_urun_fiyat.Text = dr["SatisFiyati"].ToString();
+                        satilacak_urunler.Rows.Add(id, ad, 1, fiyat);
                     }
-                    dr.Close();
-                    baglanti2.Close();
+                    else
+                    {
+                        bool check = true;
+                        string[] liste = new string[numRows];
+                        for (int i = 0; i < numRows; ++i)
+                        {
+                            liste[i] = satilacak_urunler.Rows[i].Cells[0].Value.ToString();
+                        }
+
+                        foreach (string a in liste)
+                        {
+                            if (a == id)
+                            {
+                                MessageBox.Show("Eklemeye çalıştığınız ürün zaten siparişlerde bulunmaktadır.Adeti arttırmak istiyorsanız lütfen Arttır butonuna basınız", "Hata oluştu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                check = false;
+                                break;
+                            }
+                        }
+                        if (check == true)
+                        {
+                            satilacak_urunler.Rows.Add(id, ad, 1, fiyat);
+                        }
+
+                    }
+
+
+
                 }
 
-
-            }
-            else
-            {
-                MessageBox.Show("Lütfen bir ürün seçiniz", "Hata Uyarısı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        
+                
+                    
             }
         }
+            
+        
 
         private void m_bilgi_getir3_Click(object sender, EventArgs e)           //Bu kısımda tabloda seçili olan müşteri bilgilerini textboxlara getirdik
         {
@@ -952,30 +1054,11 @@ namespace WindowsFormsApp1
                 }
                 else
                 {
-
-                    baglanti.Open();
-                    string sql_m_sorgula = $"SELECT * FROM Musteriler WHERE MusteriTC='{mtcara}'";
-                    SQLiteCommand cmd_m_sorgula = new SQLiteCommand(sql_m_sorgula, baglanti);                   //veritabanı işlemleri yapılıyor
-                    cmd_m_sorgula.ExecuteNonQuery();
-                    DataTable dt = new DataTable();
-                    SQLiteDataAdapter da = new SQLiteDataAdapter(cmd_m_sorgula);
-                    da.Fill(dt);
-                    SQLiteDataReader dr = cmd_m_sorgula.ExecuteReader();
-                    if (dr.Read())
-                    {
-                        satis_m_tc.Text = dr["MusteriTC"].ToString();
-                        satis_m_ad.Text = dr["Isim"].ToString() + " " + dr["SoyIsim"].ToString();       //veriler textboxlara geliyor.
-                        satis_m_adres.Text = dr["Adres"].ToString();
-                    }
-                    da.Dispose();
-                    dt.Dispose();
-                    dr.Close();
-
-                    baglanti.Close();
+                    satis_m_tc.Text = tbl2_musteriler.CurrentRow.Cells[0].Value.ToString();
+                   
+                    satis_m_adres.Text = tbl2_musteriler.CurrentRow.Cells[5].Value.ToString();
 
                 }
-
-
 
             }
             else
@@ -986,7 +1069,7 @@ namespace WindowsFormsApp1
 
         private void satis_siparis_adedi_TextChanged(object sender, EventArgs e)  //Bu kısımda textboxların içlerine sadece rakamsal ifade girmesini ve iki textboxın verilerine göre satış fiyatı label'ını ayarladık.
         {
-            if (System.Text.RegularExpressions.Regex.IsMatch(satis_siparis_adedi.Text, "[^0-9]"))
+            /*if (System.Text.RegularExpressions.Regex.IsMatch(satis_siparis_adedi.Text, "[^0-9]"))
             {
                 satis_siparis_adedi.Text = satis_siparis_adedi.Text.Remove(satis_siparis_adedi.Text.Length - 1);
             }
@@ -1000,8 +1083,8 @@ namespace WindowsFormsApp1
                     }
                     else
                     {
-                        int adet = Convert.ToInt32(satis_siparis_adedi.Text);
-                        int fiyat = Convert.ToInt32(satis_urun_fiyat.Text);
+                        //int adet = Convert.ToInt32(satis_siparis_adedi.Text);
+                        //int fiyat = Convert.ToInt32(satis_urun_fiyat.Text);
                         int sonuc = adet * fiyat;
                         metroSetLabel39.Text = Convert.ToString(sonuc) + " ₺";
                     }
@@ -1010,12 +1093,12 @@ namespace WindowsFormsApp1
                 {
                 }
 
-            }
+            }*/
         }
 
         private void satis_urun_fiyat_TextChanged(object sender, EventArgs e)   //Bu kısımda textboxların içlerine sadece rakamsal ifade girmesini ve iki textboxın verilerine göre satış fiyatı label'ını ayarladık.
         {
-            if (System.Text.RegularExpressions.Regex.IsMatch(satis_urun_fiyat.Text, "[^0-9]"))
+            /*if (System.Text.RegularExpressions.Regex.IsMatch(satis_urun_fiyat.Text, "[^0-9]"))
             {
                 satis_urun_fiyat.Text = satis_urun_fiyat.Text.Remove(satis_urun_fiyat.Text.Length - 1);
             }
@@ -1039,7 +1122,7 @@ namespace WindowsFormsApp1
                 {
                 }
 
-            }
+            }*/
         }
 
         private void urunislemleri_tmzle_Click(object sender, EventArgs e)                  //Bu kısımda textboxların içlerini boşalttık.
@@ -1057,13 +1140,9 @@ namespace WindowsFormsApp1
         private void satis_temizle_Click(object sender, EventArgs e)                    //Bu kısımda textboxların içlerini boşalttık.
         {
             satis_m_tc.Text = String.Empty;
-            satis_m_ad.Text = String.Empty;
-            satis_urun_id.Text = String.Empty;
-            satis_urun_ad.Text = String.Empty;
-            satis_siparis_adedi.Text = String.Empty;
-            satis_urun_fiyat.Text = String.Empty;
+            satis_fatura_no.Text = String.Empty;
             satis_m_adres.Text = String.Empty;
-
+            satilacak_urunler.Rows.Clear();
         }
 
         private void txtbox_azalan_urun_ara_TextChanged(object sender, EventArgs e)             //Bu kısımda textboxa girilen harfe göre filtreleme işlemi yaptık
@@ -1087,9 +1166,10 @@ namespace WindowsFormsApp1
                     string veritabaniyolu3 = "Data source=Database/veritabani.db";          
                     SQLiteConnection baglanti2 = new SQLiteConnection(veritabaniyolu3);                 //Bu kısımda veritabanına bağlandık
                     baglanti2.Open();
-                    string sql_m_sorgula = $"SELECT * FROM Satislar WHERE SatisKodu='{skodu}'";
-                    
-                    SQLiteCommand cmd_m_sorgula = new SQLiteCommand(sql_m_sorgula, baglanti2);
+                   
+                    string sql_m9_sorgula = $"SELECT SatisKodu,Isim,SoyIsim,UrunAdi,TeslimatAdresi,UrunAdedi,UrunSatisFiyati,SatisTarihi FROM Satislar INNER JOIN Urunler ON Satislar.UrunID=Urunler.UrunID INNER JOIN Musteriler ON Satislar.MusteriTC=Musteriler.MusteriTC WHERE SatisKodu='{skodu}'";
+
+                    SQLiteCommand cmd_m_sorgula = new SQLiteCommand(sql_m9_sorgula, baglanti2);
                     cmd_m_sorgula.ExecuteNonQuery();
                     DataTable dt = new DataTable();
                     SQLiteDataAdapter da = new SQLiteDataAdapter(cmd_m_sorgula);
@@ -1101,41 +1181,15 @@ namespace WindowsFormsApp1
                         satis_kodu.Text = dr["SatisKodu"].ToString();
                         txt_box_satis_fiyat.Text = dr["UrunSatisFiyati"].ToString();                        //Bu kısımda tablodan gelen bilgileri textboxlara yerleştirdik.
                         txt_teslimat_adres.Text = dr["TeslimatAdresi"].ToString();
+                        txt_satis_tarihi.Text= dr["SatisTarihi"].ToString();
                         urun_adet_satislar.Text = dr["UrunAdedi"].ToString();
+                        m_adi_satislar.Text = dr["Isim"].ToString() + " " + dr["SoyIsim"].ToString();
+                        urun_adi_satislar.Text = dr["UrunAdi"].ToString();                                 //Bu kısımda tablodan gelen bilgileri textboxlara yerleştirdik.
+
 
                     }
-                    string mkodu = table_satislar.SelectedRows[0].Cells[1].Value + string.Empty;
-                    string ukodu = table_satislar.SelectedRows[0].Cells[2].Value + string.Empty;
-
-                    string m_sorgula = $"SELECT Isim,SoyIsim FROM Musteriler WHERE MusteriTC='{mkodu}'";
-                    string urun_sorgula = $"SELECT UrunAdi FROM Urunler WHERE UrunID = '{ukodu}'";  
-                    SQLiteCommand cmd_m2_sorgula = new SQLiteCommand(m_sorgula, baglanti2);                         //Bu kısımda veritabanı ile ilgili işlemler yapılıyor
-                    SQLiteCommand cmd_u_sorgula = new SQLiteCommand(urun_sorgula, baglanti2);
-                    cmd_m2_sorgula.ExecuteNonQuery();
-                    cmd_u_sorgula.ExecuteNonQuery();
-
-                    DataTable dt2 = new DataTable();
-                    DataTable dt3 = new DataTable();
-
-                    SQLiteDataAdapter da2 = new SQLiteDataAdapter(cmd_m2_sorgula);
-                    SQLiteDataAdapter da3 = new SQLiteDataAdapter(cmd_u_sorgula);
-                    da2.Fill(dt2);
-                    da3.Fill(dt3);
-                    SQLiteDataReader dr2 = cmd_m2_sorgula.ExecuteReader();
-                    SQLiteDataReader dr3 = cmd_u_sorgula.ExecuteReader();
-                    if (dr2.Read()) {
-                        m_adi_satislar.Text = dr2["Isim"].ToString() +" "+ dr2["SoyIsim"].ToString();
-
-                    }
-                    if (dr3.Read())
-                    {
-                        urun_adi_satislar.Text = dr3["UrunAdi"].ToString();                                 //Bu kısımda tablodan gelen bilgileri textboxlara yerleştirdik.
-
-                    }
-                   
                     dr.Close();
-                    dr2.Close();
-                    dr3.Close();
+                   
 
                     baglanti2.Close();
                 }
@@ -1151,7 +1205,7 @@ namespace WindowsFormsApp1
         {
             txt_teslimat_adres.ReadOnly = true;
             txt_box_satis_fiyat.ReadOnly = true;
-
+            txt_satis_tarihi.Text = String.Empty;
             txt_teslimat_adres.Text = String.Empty;
             txt_box_satis_fiyat.Text = String.Empty;
             satis_kodu.Text = String.Empty;
@@ -1163,12 +1217,75 @@ namespace WindowsFormsApp1
 
         private void btn_Satis_Yap_Click(object sender, EventArgs e)                //bu kısımda satış yaptıgımız blok calısıyor.
         {
-            if (satis_m_tc.Text == "" || satis_m_ad.Text == "" || satis_urun_id.Text == "" || satis_urun_ad.Text == "" || satis_siparis_adedi.Text == "" || satis_urun_fiyat.Text == "" || satis_m_adres.Text == "")
+            if (satis_m_tc.Text == "" || satis_m_adres.Text == "" || satis_fatura_no.Text == ""||satilacak_urunler.Rows.Count==0)
             {
-                MessageBox.Show("Satış işlemi için lütfen Gerekli alanları doldurunuz.", "Hata Oluştu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                Uyari("Satış işlemi için lütfen Gerekli alanları doldurunuz.");
             }
             else
             {
+                string veritabaniyolu3 = "Data source=Database/veritabani.db";
+                SQLiteConnection baglanti2 = new SQLiteConnection(veritabaniyolu3);
+                baglanti2.Open();
+
+                DateTime bugun = DateTime.Today;
+                string gun = bugun.ToString("dd");
+                string ay = bugun.ToString("MM");
+                string yil = bugun.ToString("yyyy");
+                string tarihler = $"{yil}-{ay}-{gun}";
+
+                for (int i = 0; i < satilacak_urunler.Rows.Count; i++) 
+                {
+                    string sql = $"INSERT INTO Satislar ('UrunID','UrunAdedi','UrunSatisFiyati','FaturaNo') VALUES ('{satilacak_urunler.Rows[i].Cells[0].Value}','{satilacak_urunler.Rows[i].Cells[2].Value}','{satilacak_urunler.Rows[i].Cells[3].Value}','{satis_fatura_no.Text}') "; 
+                    SQLiteCommand cmd_sql = new SQLiteCommand(sql, baglanti2);
+                    cmd_sql.ExecuteNonQuery();
+                }
+                int toplamfiyat = 0;
+                for (int i = 0; i < satilacak_urunler.Rows.Count; ++i)
+                {
+                    int ID = Convert.ToInt32(satilacak_urunler.Rows[i].Cells[0].Value);              
+                    int adet = Convert.ToInt32(satilacak_urunler.Rows[i].Cells[2].Value);              
+                    int fiyat = Convert.ToInt32(satilacak_urunler.Rows[i].Cells[3].Value);              
+                    toplamfiyat += adet * fiyat;
+                    string stokdurumu = $"SELECT ToplamUrunAdedi FROM Urunler where UrunID='{ID}'";
+                    SQLiteCommand cmd_stok = new SQLiteCommand(stokdurumu, baglanti2);
+                    int stok = Convert.ToInt32(cmd_stok.ExecuteScalar());
+                    int sonuc = stok - adet;
+                    string sql_gnclle = $"UPDATE Urunler set ToplamUrunAdedi='{sonuc}' where UrunID='{ID}'";
+                    SQLiteCommand cmd_gnclle = new SQLiteCommand(sql_gnclle, baglanti2);
+                    cmd_gnclle.ExecuteNonQuery();
+
+                }
+                string sql_fatura = $"INSERT INTO Faturalar ('FaturaNo','MusteriTC','Tarih','ToplamFiyat','TeslimatAdresi') VALUES ('{satis_fatura_no.Text}','{satis_m_tc.Text}','{tarihler}','{toplamfiyat}','{satis_m_adres.Text}')";
+                SQLiteCommand cmd_fatura = new SQLiteCommand(sql_fatura, baglanti2);
+                cmd_fatura.ExecuteNonQuery();
+
+                for (int i = 0; i < satilacak_urunler.Rows.Count; ++i)
+                {
+                    int satilacak_adet = Convert.ToInt32(satilacak_urunler.Rows[i].Cells[2].Value);            
+                    int fiyat = Convert.ToInt32(satilacak_urunler.Rows[i].Cells[3].Value);             
+                }
+
+
+
+
+
+
+                baglanti.Close();
+                satis_m_tc.Text = String.Empty;
+                satis_fatura_no.Text = String.Empty;
+                satis_m_adres.Text = String.Empty;
+                satilacak_urunler.Rows.Clear();
+
+                PopupNotifier popup = new PopupNotifier();
+                popup.Image = Properties.Resources.checked__2_;
+                popup.TitleColor = System.Drawing.Color.FromArgb(0, 0, 0);
+                popup.BodyColor = System.Drawing.Color.FromArgb(69, 139, 116);                          //Bu kısımda kullanıcıya sağ altta bilgi mesajı verdik.
+                popup.TitleText = "İşlem Başarılı";
+                popup.ContentText = "\n Satış başarıyla oluşturulmuştur.";
+                popup.Popup();
+
+                tablolariGuncelle();
+                /*
                 string veritabaniyolu3 = "Data source=Database/veritabani.db";
                 SQLiteConnection baglanti2 = new SQLiteConnection(veritabaniyolu3);                                             //Bu kısımda veritabanına bağlandık
                 baglanti2.Open();
@@ -1176,20 +1293,13 @@ namespace WindowsFormsApp1
 
                 SQLiteCommand cmd_stok_varmi = new SQLiteCommand(stok_varmi, baglanti2);
                
-                SQLiteDataReader dr = cmd_stok_varmi.ExecuteReader();
-                if (dr.Read()) {
-                    metroSetTextBox4.Text = dr["ToplamUrunAdedi"].ToString();
-                    
-                }
-                dr.Close();
+                int toplamAdet = Convert.ToInt32(cmd_stok_varmi.ExecuteScalar());
 
-                int toplamAdet = Convert.ToInt32(metroSetTextBox4.Text);
                 int satilanadet= Convert.ToInt32(satis_siparis_adedi.Text);
                 int sonuc=toplamAdet - satilanadet;                                         //Bu kısımda stoktan fazla ürün satılmaya calısıyorsa bu blok calısıyor.
-                metroSetTextBox4.Text = String.Empty;
                 if (satilanadet > toplamAdet)
                 {
-                    MessageBox.Show("Yeterli stok kalmadığından dolayı satış işleminız GERÇEKLEŞMEMİŞTİR.", "İŞLEM BAŞARISIZ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Yeterli stok olmadığından dolayı satış işleminız GERÇEKLEŞMEMİŞTİR.", "İŞLEM BAŞARISIZ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
                 else if (satis_siparis_adedi.Text == "0") { 
                     MessageBox.Show("Sıfır 0 ürün satışı yapmanız imkansızdır.", "İŞLEM BAŞARISIZ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -1197,7 +1307,15 @@ namespace WindowsFormsApp1
                 }
                 else
                 {
-                    string sql_satis_ekle = $"INSERT INTO Satislar ('MusteriTC','UrunID','TeslimatAdresi','UrunAdedi','UrunSatisFiyati') VALUES ('{satis_m_tc.Text}','{satis_urun_id.Text}','{satis_m_adres.Text}','{satis_siparis_adedi.Text}','{satis_urun_fiyat.Text}')";
+                    DateTime bugun = DateTime.Today;
+                    string gun = bugun.ToString("dd");
+                    string ay = bugun.ToString("MM");
+                    string yil = bugun.ToString("yyyy");
+                    string tarihler = $"{yil}-{ay}-{gun}";
+                    string fiyat = metroSetLabel39.Text;
+                    fiyat = fiyat.Substring(0, fiyat.Length - 2);
+                    int gnclefiyat = Convert.ToInt32(fiyat);
+                    string sql_satis_ekle = $"INSERT INTO Satislar ('MusteriTC','UrunID','TeslimatAdresi','UrunAdedi','UrunSatisFiyati','SatisTarihi') VALUES ('{satis_m_tc.Text}','{satis_urun_id.Text}','{satis_m_adres.Text}','{satis_siparis_adedi.Text}','{gnclefiyat}','{tarihler}')";
                     SQLiteCommand cmd_satis_ekle = new SQLiteCommand(sql_satis_ekle, baglanti2);
 
                     string stokguncelle = $"UPDATE Urunler set ToplamUrunAdedi='{sonuc}' where UrunID='{satis_urun_id.Text}'";
@@ -1206,7 +1324,7 @@ namespace WindowsFormsApp1
                     cmd_satis_ekle.ExecuteNonQuery();
 
                     satis_m_tc.Text = String.Empty;
-                    satis_m_ad.Text = String.Empty;
+                    satis_fatura_no.Text = String.Empty;
                     metroSetTextBox4.Text = String.Empty;
                     satis_urun_id.Text = String.Empty;
                     satis_urun_ad.Text = String.Empty;                                                      //Bu kısımda textboxların içlerini boşalttık.
@@ -1225,7 +1343,7 @@ namespace WindowsFormsApp1
 
                     tablolariGuncelle();
 
-                }
+                }*/
             }
         }
 
@@ -1258,6 +1376,7 @@ namespace WindowsFormsApp1
             txt_box_satis_fiyat.Text = String.Empty;
             satis_kodu.Text = String.Empty;                                                             //Bu kısımda textboxların içlerini boşalttık.
             m_adi_satislar.Text = String.Empty;
+            txt_satis_tarihi.Text = String.Empty;
             urun_adi_satislar.Text = String.Empty;
             urun_adet_satislar.Text = String.Empty;
 
@@ -1393,7 +1512,6 @@ namespace WindowsFormsApp1
         private void search_ted_txt_TextChanged(object sender, EventArgs e)           //Bu kısımda textboxa girilen harfe göre tablodan filtreleme işlemi yapılıyor.
         {
             (table_tedler_2.DataSource as DataTable).DefaultView.RowFilter = string.Format("TedarikciIsmi LIKE '{0}%'", search_ted_txt.Text);
-
         }
 
         private void alis_ted_bilgi_getir_Click(object sender, EventArgs e)         //Bu kısımda butona basıldıgında tedarikçi tablosundan bilgiler textboxlara getiriliyor.
@@ -1482,7 +1600,6 @@ namespace WindowsFormsApp1
                     string urunId = table_urunler_3.SelectedRows[0].Cells[0].Value + string.Empty;
                     string veritabaniyolu2 = "Data source=Database/veritabani.db";
                     SQLiteConnection baglanti2 = new SQLiteConnection(veritabaniyolu2);
-                    btn_urun_sil.Visible = true;
                     baglanti2.Open();
                     string sql_m_sorgula = $"SELECT * FROM Urunler WHERE UrunID='{urunId}'";
                     SQLiteCommand cmd_m_sorgula = new SQLiteCommand(sql_m_sorgula, baglanti2);
@@ -1563,15 +1680,25 @@ namespace WindowsFormsApp1
                 SQLiteCommand cmd_urun_ekle = new SQLiteCommand(sql_urun_ekle, baglanti2);
                 cmd_urun_ekle.ExecuteNonQuery();
 
-                string id_sorgula = $"SELECT UrunID FROM Urunler where UrunAdi='{txt_1_u_adi.Text}'";
+                    
+                string id_sorgula = $"SELECT MAX(UrunID) FROM Urunler";
                 SQLiteCommand cmd_id_sorgu = new SQLiteCommand(id_sorgula, baglanti2);
-                cmd_id_sorgu.ExecuteNonQuery();
-
+                int ID = Convert.ToInt32(cmd_id_sorgu.ExecuteScalar());
+                      
+              
                 SQLiteDataReader dr6;
                 dr6 = cmd_id_sorgu.ExecuteReader();
                 while (dr6.Read()) {
-                    string a = dr6.GetValue(0).ToString();                                                          //Bu kısımda veritabanı ile ilgili işlemler yaptık
-                    string alis_ekle = $"INSERT INTO Alislar ('TedarikciIsmi','UrunID','AlinanUrunAdedi','UrununAlisFiyati') VALUES ('{txt_1_t_ad.Text}','{a}','{txt_1_u_adet.Text}','{txt_1_u_alis_f.Text}')";
+                                                                              //Bu kısımda veritabanı ile ilgili işlemler yaptık
+                    DateTime bugun = DateTime.Today;
+                    string gun = bugun.ToString("dd");
+                    string ay = bugun.ToString("MM");
+                    string yil = bugun.ToString("yyyy");
+                    string tarih = $"{yil}-{ay}-{gun}";
+                    string fiyat = lbl_alis_fiyati.Text;
+                    fiyat = fiyat.Substring(0, fiyat.Length - 2);
+                    int gnclefiyat = Convert.ToInt32(fiyat);
+                    string alis_ekle = $"INSERT INTO Alislar ('TedarikciIsmi','UrunID','AlinanUrunAdedi','UrununAlisFiyati','AlisTarihi') VALUES ('{txt_1_t_ad.Text}','{ID}','{txt_1_u_adet.Text}','{fiyat}','{tarih}')";
                     SQLiteCommand cmd_alis_ekle = new SQLiteCommand(alis_ekle, baglanti2);
                     cmd_alis_ekle.ExecuteNonQuery();
                 }
@@ -1629,7 +1756,15 @@ namespace WindowsFormsApp1
                     SQLiteCommand cmd_stok_gnclle = new SQLiteCommand(sql_stokgnclle, baglanti2);
                     cmd_stok_gnclle.ExecuteNonQuery();
                 }
-                string sql_alis_ekle = $"INSERT INTO Alislar ('TedarikciIsmi','UrunID','AlinanUrunAdedi','UrununAlisFiyati') VALUES ('{txt_2_t_ad.Text}','{a_urun_id.Text}','{txt_2_u_adet.Text}','{txt_2_u_alis_f.Text}')";
+                DateTime bugun = DateTime.Today;
+                string gun = bugun.ToString("dd");
+                string ay = bugun.ToString("MM");
+                string yil = bugun.ToString("yyyy");
+                string tarih = $"{yil}-{ay}-{gun}";
+                string fiyat = lbl_2_alislar_fiyat.Text;
+                fiyat = fiyat.Substring(0, fiyat.Length - 2);
+                int gnclefiyat = Convert.ToInt32(fiyat);
+                string sql_alis_ekle = $"INSERT INTO Alislar ('TedarikciIsmi','UrunID','AlinanUrunAdedi','UrununAlisFiyati','AlisTarihi') VALUES ('{txt_2_t_ad.Text}','{a_urun_id.Text}','{txt_2_u_adet.Text}','{fiyat}','{tarih}')";
                 SQLiteCommand CMD_alis_ekle = new SQLiteCommand(sql_alis_ekle, baglanti2);
                 CMD_alis_ekle.ExecuteNonQuery();
 
@@ -1669,7 +1804,7 @@ namespace WindowsFormsApp1
                     string veritabaniyolu3 = "Data source=Database/veritabani.db";          //Bu kısımda veritabanına bağlanıldı.
                     SQLiteConnection baglanti2 = new SQLiteConnection(veritabaniyolu3);
                     baglanti2.Open();
-                    string sql_m_sorgula = $"SELECT * FROM Alislar WHERE AlisKodu='{akodu}'";
+                    string sql_m_sorgula = $"SELECT AlisKodu,TedarikciIsmi,UrunAdi,AlinanUrunAdedi,UrununAlisFiyati FROM Alislar INNER JOIN Urunler ON Alislar.UrunID=Urunler.UrunID WHERE AlisKodu='{akodu}'";
 
                     SQLiteCommand cmd_m_sorgula = new SQLiteCommand(sql_m_sorgula, baglanti2);
                     cmd_m_sorgula.ExecuteNonQuery();
@@ -1682,30 +1817,17 @@ namespace WindowsFormsApp1
                     {
                         alis_kodu.Text = dr["AlisKodu"].ToString();
                         text_ted_adi.Text = dr["TedarikciIsmi"].ToString();                     //Bu kısımda tablodaki verileri ilgili textboxların içlerine yerleştirmiş olduk.
-                        alis_u_id.Text = dr["UrunID"].ToString();
+                                                                                                
+                        alis_u_id.Text = table_alislar.CurrentRow.Cells[2].Value.ToString();
                         txt_toplam_urun_Adet.Text = dr["AlinanUrunAdedi"].ToString();
                         alis_fiyati_alislar.Text = dr["UrununAlisFiyati"].ToString();
+                        urun_adi.Text = dr["UrunAdi"].ToString();                              //Bu kısımda tablodaki verileri ilgili textboxların içlerine yerleştirmiş olduk.
+
 
                     }
                     dr.Close();
-                    string urunkodu = table_alislar.SelectedRows[0].Cells[2].Value + string.Empty;
-                    string urun_adi_sorgula = $"SELECT UrunAdi FROM Urunler WHERE UrunID='{urunkodu}'";
 
-                    SQLiteCommand cmd_u_Ad_sorgula = new SQLiteCommand(urun_adi_sorgula, baglanti2);
-                    cmd_u_Ad_sorgula.ExecuteNonQuery();                                                 //Bu kısımda veritabanı ile ilgili işlemler yapıldı.
-
-                    DataTable dt5 = new DataTable();
-                    SQLiteDataAdapter da5 = new SQLiteDataAdapter(cmd_u_Ad_sorgula);
-                    da5.Fill(dt5);
-                    SQLiteDataReader dr5 = cmd_u_Ad_sorgula.ExecuteReader();
-
-                    if (dr5.Read())
-                    {
-                        urun_adi.Text = dr5["UrunAdi"].ToString();                              //Bu kısımda tablodaki verileri ilgili textboxların içlerine yerleştirmiş olduk.
-
-                    }
-
-                    dr5.Close();
+                    
                     baglanti2.Close();
                 }
 
@@ -1824,6 +1946,28 @@ namespace WindowsFormsApp1
             {
                 txt_1_u_alis_f.Text = txt_1_u_alis_f.Text.Remove(txt_1_u_alis_f.Text.Length - 1);
             }
+            else
+            {
+
+                try
+                {
+                    if (txt_1_u_alis_f.Text == "")
+                    {
+                        lbl_alis_fiyati.Text = "";
+                    }
+                    else
+                    {
+                        int adet = Convert.ToInt32(txt_1_u_adet.Text);
+                        int fiyat = Convert.ToInt32(txt_1_u_alis_f.Text);
+                        int sonuc = adet * fiyat;
+                        lbl_alis_fiyati.Text = Convert.ToString(sonuc) + " ₺";
+                    }
+                }
+                catch
+                {
+                }
+            }
+                
         }
 
         private void txt_1_u_satis_f_TextChanged(object sender, EventArgs e)            //Bu blokta kullanıcının textboxa sadece rakamsal ifade girilmesini sağladık.
@@ -1840,6 +1984,26 @@ namespace WindowsFormsApp1
             {
                 txt_1_u_adet.Text = txt_1_u_adet.Text.Remove(txt_1_u_adet.Text.Length - 1);
             }
+            else {
+                    try
+                    {
+                        if (txt_1_u_adet.Text == "")
+                        {
+                        lbl_alis_fiyati.Text = "";
+                        }
+                        else
+                        {
+                            int adet = Convert.ToInt32(txt_1_u_adet.Text);
+                            int fiyat = Convert.ToInt32(txt_1_u_alis_f.Text);
+                            int sonuc = adet * fiyat;
+                        lbl_alis_fiyati.Text = Convert.ToString(sonuc) + " ₺";
+                        }
+                    }
+                    catch
+                    {
+                    }
+                
+            }
         }
 
         private void txt_2_u_alis_f_TextChanged(object sender, EventArgs e)             //Bu blokta kullanıcının textboxa sadece rakamsal ifade girilmesini sağladık.
@@ -1848,6 +2012,26 @@ namespace WindowsFormsApp1
             {
                 txt_2_u_alis_f.Text = txt_2_u_alis_f.Text.Remove(txt_2_u_alis_f.Text.Length - 1);
             }
+            else
+            {
+                try
+                {
+                    if (txt_2_u_alis_f.Text == "")
+                    {
+                        lbl_2_alislar_fiyat.Text = "";
+                    }
+                    else
+                    {
+                        int adet = Convert.ToInt32(txt_2_u_alis_f.Text);
+                        int fiyat = Convert.ToInt32(txt_2_u_adet.Text);
+                        int sonuc = adet * fiyat;
+                        lbl_2_alislar_fiyat.Text = Convert.ToString(sonuc) + " ₺";
+                    }
+                }
+                catch
+                {
+                }
+            }
         }
 
         private void txt_2_u_adet_TextChanged(object sender, EventArgs e)               //Bu blokta kullanıcının textboxa sadece rakamsal ifade girilmesini sağladık.
@@ -1855,6 +2039,28 @@ namespace WindowsFormsApp1
             if (System.Text.RegularExpressions.Regex.IsMatch(txt_2_u_adet.Text, "[^0-9]"))
             {
                 txt_2_u_adet.Text = txt_2_u_adet.Text.Remove(txt_2_u_adet.Text.Length - 1);
+            }
+            else
+            {
+
+                try
+                {
+                    if (txt_2_u_adet.Text == "")
+                    {
+                        lbl_2_alislar_fiyat.Text = "";
+                    }
+                    else
+                    {
+                        int adet = Convert.ToInt32(txt_2_u_alis_f.Text);
+                        int fiyat = Convert.ToInt32(txt_2_u_adet.Text);
+                        int sonuc = adet * fiyat;
+                        lbl_2_alislar_fiyat.Text = Convert.ToString(sonuc) + " ₺";
+                    }
+                }
+                catch
+                {
+                }
+
             }
         }
 
@@ -1881,6 +2087,219 @@ namespace WindowsFormsApp1
                 urun_fiyati_gnclle.Text = urun_fiyati_gnclle.Text.Remove(urun_fiyati_gnclle.Text.Length - 1);
             }
         }
+
+        private void satislar_switch_btn_SwitchedChanged(object sender)             //Satışlar sayfasındaki Bu ay/Tüm zamanların switch nesnesi değişirken çalışan blok 
+        {
+            string veritabaniyolu = "Data source=Database/veritabani.db";
+            SQLiteConnection baglanti2 = new SQLiteConnection(veritabaniyolu);
+            DateTime bugun = DateTime.Today;
+            string ay = bugun.ToString("MM");
+            string yil = bugun.ToString("yyyy");
+            baglanti2.Open();
+            if (satislar_switch_btn.Switched==true)                                                               
+            {
+                string sql_Gelir_Tablosu = $"SELECT * FROM Satislar";
+                SQLiteDataAdapter da_gelir_tablosu = new SQLiteDataAdapter(sql_Gelir_Tablosu, baglanti);
+                DataTable dt_gelir_tablosu = new DataTable();
+                da_gelir_tablosu.Fill(dt_gelir_tablosu);
+                table_satislar.DataSource = dt_gelir_tablosu;
+            }
+            else                                                                                              
+            {
+                string sql_Gelir_Tablosu = $"SELECT * FROM Satislar WHERE SatisTarihi BETWEEN '{yil}-{ay}-01' AND '{yil}-{ay}-31'";
+                SQLiteDataAdapter da_gelir_tablosu = new SQLiteDataAdapter(sql_Gelir_Tablosu, baglanti);
+                DataTable dt_gelir_tablosu = new DataTable();
+                da_gelir_tablosu.Fill(dt_gelir_tablosu);
+                table_satislar.DataSource = dt_gelir_tablosu;
+            }
+            baglanti2.Close();
+        }
+
+
+        private void switch_grafik_CheckedChanged(object sender, Bunifu.UI.WinForms.BunifuToggleSwitch.CheckedChangedEventArgs e) //Ciro sayfasında tablo/pasta grafiği değiştirilmesini sağlayan blok
+        {
+            if (switch_grafik.Checked == true)
+            {
+                panel_pasta1.Visible = true;
+                panel_pasta2.Visible = true;
+                table_ciro_satislar.Visible = false;
+                table_ciro_alislar.Visible = false;
+            }
+            else
+            {
+                panel_pasta1.Visible = false;
+                panel_pasta2.Visible = false;
+                table_ciro_satislar.Visible = true;
+                table_ciro_alislar.Visible = true;
+
+            }
+        }
+
+        private void btn_aylik_ciro_Click(object sender, EventArgs e) //Tarihe göre pasta ve tablolara aylık ciro bilgilerini getiren method 
+        {
+            string veritabaniyolu = "Data source=Database/veritabani.db";
+            SQLiteConnection baglanti2 = new SQLiteConnection(veritabaniyolu);
+            baglanti2.Open();
+            string ay = cbox_ay.Text;
+            string yil = cbox_yil.Text;
+
+            
+            string sql_satis_sorgula = $"SELECT Isim,SoyIsim,UrunAdi,UrunAdedi,UrunSatisFiyati,SatisTarihi from satislar INNER JOIN Urunler ON Satislar.UrunID=Urunler.UrunID INNER JOIN Musteriler ON Satislar.MusteriTC=Musteriler.MusteriTC where SatisTarihi BETWEEN '{yil}-{ay}-01' AND '{yil}-{ay}-31'";
+            string sql_alis_sorgula = $"SELECT TedarikciIsmi,UrunAdi,AlinanUrunAdedi,UrununAlisFiyati,AlisTarihi FROM Alislar INNER JOIN Urunler on Alislar.UrunID=Urunler.UrunID where AlisTarihi BETWEEN '{yil}-{ay}-01' AND '{yil}-{ay}-31' ORDER BY AlisTarihi";
+            string sql_chart_satis = $"SELECT TedarikciIsmi,UrunAdi, SUM(AlinanUrunAdedi)AS AlinanUrunAdedi, AlisTarihi,SUM(UrununAlisFiyati) as UrununAlisFiyati FROM Alislar INNER JOIN Urunler on Alislar.UrunID = Urunler.UrunID WHERE AlisTarihi BETWEEN '{yil}-{ay}-01' AND '{yil}-{ay}-31' GROUP BY UrunAdi";
+            string sql_chart_alis = $"SELECT UrunAdi,SUM(UrunAdedi)as UrunAdedi,UrunSatisFiyati FROM Satislar INNER JOIN Urunler on Satislar.UrunID = Urunler.UrunID where SatisTarihi BETWEEN '{yil}-{ay}-01' AND '{yil}-{ay}-31' GROUP BY UrunAdi";
+            SQLiteDataAdapter da = new SQLiteDataAdapter(sql_alis_sorgula, baglanti2);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+
+            SQLiteDataAdapter da2 = new SQLiteDataAdapter(sql_satis_sorgula, baglanti2);
+            DataTable dt2 = new DataTable();
+            da2.Fill(dt2);
+
+            SQLiteDataAdapter da3 = new SQLiteDataAdapter(sql_chart_satis, baglanti2);
+            DataTable dt3 = new DataTable();
+            da3.Fill(dt3);
+
+            SQLiteDataAdapter da4 = new SQLiteDataAdapter(sql_chart_alis, baglanti2);
+            DataTable dt4 = new DataTable();
+            da4.Fill(dt4);
+
+            table_ciro_alislar.DataSource = dt;
+            table_ciro_alislar.AllowUserToAddRows = false;
+
+            table_ciro_satislar.DataSource = dt2;
+            table_ciro_satislar.AllowUserToAddRows = false;
+
+            table_chart_alislar.DataSource = dt3;
+            table_chart_alislar.AllowUserToAddRows = false;
+
+            table_chart_satislar.DataSource = dt4;
+            table_chart_satislar.AllowUserToAddRows = false;
+
+            int toplam_alis = 0;
+            for (int i = 0; i < table_ciro_alislar.Rows.Count; ++i)
+            {
+                toplam_alis += Convert.ToInt32(table_ciro_alislar.Rows[i].Cells[3].Value);              //Toplam alışları tablo üzerinde for döngüsü ile gezinerek topluyoruz ve label'a aktarıyoruz
+            }
+            lbl_aylik_gider.Text = Convert.ToString(toplam_alis);
+            int toplam_satis = 0;
+
+            for (int i = 0; i < table_ciro_satislar.Rows.Count; ++i)
+            {
+                toplam_satis += Convert.ToInt32(table_ciro_satislar.Rows[i].Cells[4].Value);            //Toplam satışları tablo üzerinde for döngüsü ile gezinerek topluyoruz ve label'a aktarıyoruz
+            }
+            lbl_aylik_gelir.Text = Convert.ToString(toplam_satis);
+
+            int toplam_ciro=toplam_satis - toplam_alis;
+            lbl_aylik_ciro.Text = Convert.ToString(toplam_ciro);
+
+            
+            
+            baglanti2.Close();
+                                                                                                    //Alışların pasta grafiğini doldurma işlemleri
+            Func<ChartPoint, string> labelPoint = chartPoint => string.Format("{0} ({1:P})", chartPoint.Y, chartPoint.Participation);
+            SeriesCollection piechartData = new SeriesCollection();
+            var collection = table_chart_alislar.Rows.Cast<DataGridViewRow>().GroupBy(x => x.Cells[1].Value).Where(g => g.Count() > 0).Select(y => new { Element = y.Key, Counter = y.Count() }).ToList();
+            foreach (DataGridViewRow item in table_chart_alislar.Rows)
+            {
+                piechartData.Add(new PieSeries { Title = Convert.ToString(item.Cells["UrunAdi"].Value), Values = new ChartValues<double> { Convert.ToDouble(item.Cells["AlinanUrunAdedi"].Value) }, DataLabels = true, LabelPoint = labelPoint });
+            }
+            chart_alislar.Series = piechartData;
+            chart_alislar.LegendLocation = LegendLocation.Right;
+                                                                                                      //Satışların pasta grafiğini doldurma işlemleri
+            Func<ChartPoint, string> labelPoint2 = chartPoint => string.Format("{0} ({1:P})", chartPoint.Y, chartPoint.Participation);
+            SeriesCollection piechartData2 = new SeriesCollection();
+            var collection2 = table_chart_satislar.Rows.Cast<DataGridViewRow>().GroupBy(x => x.Cells[1].Value).Where(g => g.Count() > 0).Select(y => new { Element = y.Key, Counter = y.Count() }).ToList();
+            foreach (DataGridViewRow item in table_chart_satislar.Rows)
+            {
+                piechartData2.Add(new PieSeries { Title = Convert.ToString(item.Cells["UrunAdi"].Value), Values = new ChartValues<double> { Convert.ToDouble(item.Cells["UrunAdedi"].Value) }, DataLabels = true, LabelPoint = labelPoint });
+            }
+            chart_satislar.Series = piechartData2;
+            chart_satislar.LegendLocation = LegendLocation.Right;
+
+        }
+
+        private void switch_alislar_SwitchedChanged(object sender)  //Alıslar sayfasındaki Bu ay/Tüm zamanların switch nesnesi değişirken çalışan blok
+        {
+            string veritabaniyolu = "Data source=Database/veritabani.db";
+            SQLiteConnection baglanti2 = new SQLiteConnection(veritabaniyolu);
+            DateTime bugun = DateTime.Today;
+            string ay = bugun.ToString("MM");
+            string yil = bugun.ToString("yyyy");
+            baglanti2.Open();
+            if (switch_alislar.Switched == true)
+            {
+                string sql_Gelir_Tablosu = $"SELECT * FROM Alislar";
+                SQLiteDataAdapter da_gelir_tablosu = new SQLiteDataAdapter(sql_Gelir_Tablosu, baglanti);
+                DataTable dt_gelir_tablosu = new DataTable();
+                da_gelir_tablosu.Fill(dt_gelir_tablosu);
+                table_alislar.DataSource = dt_gelir_tablosu;
+            }
+            else
+            {
+                string sql_Gelir_Tablosu = $"SELECT * FROM Alislar WHERE AlisTarihi BETWEEN '{yil}-{ay}-01' AND '{yil}-{ay}-31'";
+                SQLiteDataAdapter da_gelir_tablosu = new SQLiteDataAdapter(sql_Gelir_Tablosu, baglanti);
+                DataTable dt_gelir_tablosu = new DataTable();
+                da_gelir_tablosu.Fill(dt_gelir_tablosu);
+                table_alislar.DataSource = dt_gelir_tablosu;
+            }
+            baglanti2.Close();
+        }
+
+        private void btn_arttir_Click(object sender, EventArgs e)
+        {
+            if (satilacak_urunler.SelectedRows.Count == 0)
+            {
+                Uyari("Lütfen önce ürün ekleyiniz.");
+            }
+            else
+            {
+                string id = satilacak_urunler.SelectedRows[0].Cells[0].Value + string.Empty;
+                int adet = Convert.ToInt32(satilacak_urunler.SelectedRows[0].Cells[2].Value);
+
+                string veritabaniyolu = "Data source=Database/veritabani.db";
+                SQLiteConnection baglanti2 = new SQLiteConnection(veritabaniyolu);
+                baglanti2.Open();
+                string sqlsorgu = $"SELECT ToplamUrunAdedi FROM Urunler where UrunID='{id}'";
+                SQLiteCommand cmd = new SQLiteCommand(sqlsorgu, baglanti2);
+                int toplamadet = Convert.ToInt32(cmd.ExecuteScalar());
+                baglanti2.Close();
+                if (adet == toplamadet) 
+                {
+                    Uyari("Yetersiz stoktan dolayı ekleme yapamazsınız.");
+                }
+                else 
+                { 
+                adet += 1;
+                satilacak_urunler.SelectedRows[0].Cells[2].Value = adet;
+                }
+            }
+
+        }
+
+        private void btn_azalt_Click(object sender, EventArgs e)
+        {
+            if (satilacak_urunler.SelectedRows.Count == 0)
+            {
+                Uyari("Lütfen önce ürün ekleyiniz.");
+            }
+            else
+            {
+                int adet = Convert.ToInt32(satilacak_urunler.SelectedRows[0].Cells[2].Value);
+                if (adet == 1)
+                {
+                    foreach (DataGridViewRow row in satilacak_urunler.SelectedRows)
+                    {
+                        satilacak_urunler.Rows.RemoveAt(row.Index);
+                    }
+                }
+                else { 
+                adet -= 1;
+                satilacak_urunler.SelectedRows[0].Cells[2].Value = adet;
+                }
+            }
+        }
     }
+    
 }
 
