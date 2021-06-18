@@ -11,7 +11,7 @@
   <h3 align="center">Stok/Muhasebe Yazılımı</h3>
 
   <p align="center">
-    Stok Takip/Muhasebe Yazılımı
+    Stok Takip/Muhasebe Yazılımı <br>(PROGRAM GELİŞTİRME AŞAMASINDADIR. YAKINDA SETUP YÜKLENECEKTİR)
     <br />
     <br />
     <p align="center"><address>
@@ -66,13 +66,13 @@
 
 ## Başlangıç
 
-Kurulumda Windows işletim sistemleri için sadece setup dosyasını indirmeniz yeterli olacaktır.Açık kaynak kodlu bir yazılım olduğundan dolayı gönül rahatlığı ile programı bilgisayarınıza kurup kullanabilirsiniz.Hiçbir şekilde zararlı yazılım enjekte edilmemiş olup tüm kodları public yani herkese açıktır.
+Kurulumda Windows işletim sistemleri için sadece setup dosyasını indirmeniz yeterli olacaktır.Açık kaynak kodlu bir yazılım olduğundan dolayı gönül rahatlığı ile programı bilgisayarınıza kurup kullanabilirsiniz.Hiçbir şekilde zararlı yazılım enjekte edilmemiş olup tüm kodları public yani herkese açıktır.(PROGRAM GELİŞTİRME AŞAMASINDADIR. YAKINDA SETUP YÜKLENECEKTİR)
 
 
 ### Kurulum
 0. -Windows-
 
-Windows için setup dosyasını indirip klasik bir kurulum dosyası şeklinde kurabilirsiniz.
+Windows için setup dosyasını indirip klasik bir kurulum dosyası şeklinde kurabilirsiniz. (PROGRAM GELİŞTİRME AŞAMASINDADIR. YAKINDA SETUP YÜKLENECEKTİR)
 
 ## Kullanım
 
